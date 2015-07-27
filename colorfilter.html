@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Document</title>
+</head>
+<style>
+
+</style>
+<>
+<canvas height="500" width="500"></canvas>
+<input type="range" id="myRange" min="0" max="255" value="100">255
+<button value="gray">gray</button>
+<button value="red">red</button>
+<button value="green">green</button>
+<button value="blue">blue</button>
+<button value="yellow">yellow</button>
+<button value="fadeout">fadeout</button>
+<button value="reset">reset</button>
+</body>
+<script>
+    var filters = {
+        grayscale: function (pixel_array) {
+            // modify the pixel array
+            // loop over all the pixels
+            // reset the r, g and b values to the gr value
+            for (var i = 0; i < pixel_array.length; i+=4) {
+                pixel_array[i] = pixel_array[i + 1] = pixel_array[i + 2] = gr(i);
+            }
+            function gr(i) {
+                return 0.21 * pixel_array[i] + 0.72 * pixel_array[i + 1] + 0.07 * pixel_array[i + 2];
+            }
+        },
+        threshold: function (pixel_array,pixel_array2) {
+            // modify the pixel array
+            // loop over all the pixels
+            // reset the r, g and b values to the gr value
+            for (var i = 0; i < pixel_array.length; i+=4) {
+                if (gr(i) < range.value) {
+                    pixel_array[i] = pixel_array[i + 1] = pixel_array[i + 2] = 0;
+                } else {
+                    pixel_array[i] = pixel_array[i + 1] = pixel_array[i + 2] = 255;
+                }
+            }
+            function gr(i) {
+                return 0.21 * pixel_array2[i] + 0.72 * pixel_array2[i + 1] + 0.07 * pixel_array2[i + 2];
+
+            }
+
+        },
+        filtercolor: function (pixel_array,n) {
+            var colorup, colordown;
+            switch(n)
+            {
+                case "red":
+                    colorup = 1;
+                    colordown=0.6;
+                    break;
+                case "green":
+                    colorup= 0.45;
+                    colordown=0.3;
+                    break;
+                case "blue":
+                    colorup= 0.6;
+                    colordown=0.45;
+                    break;
+                case "yellow":
+                    colorup= 0.3;
+                    colordown=0.02;
+                    break;
+            }
+            for (var i = 0; i < pixel_array.length; i+=4) {
+                var h = rgbtohsl(pixel_array[i], pixel_array[i+1],pixel_array[i+2]);
+                if( !(colordown < h && h < colorup)) pixel_array[i] = pixel_array[i + 1] = pixel_array[i + 2] = gr(i);
+
+            };
+            function gr(i) {
+                return 0.21 * pixel_array[i] + 0.72 * pixel_array[i + 1] + 0.07 * pixel_array[i + 2];
+
+            }
+
+        },
+        fadeout :function(pixel_array,width,height) {
+            for(var i =0; i<pixel_array.length; i+=4){
+                var positionnumber = i/4+1;
+                var positionX = positionnumber%width;
+                var positionY = positionnumber/width;
+                var totaldistance = Math.sqrt(Math.pow(width/2,2) + Math.pow(height/2,2));
+                var distance = Math.sqrt(Math.pow(Math.abs(width/2-positionX),2) + Math.pow(Math.abs(height/2-positionY),2));
+                pixel_array[i+3]=(1-distance/totaldistance)*255;
+            }
+        }
+
+    };
+    var canvas = document.querySelector('canvas');
+    var range = document.querySelector('input[type="range"]');
+    var gray = document.querySelector('button[value="gray"]');
+    var red = document.querySelector('button[value="red"]');
+    var green = document.querySelector('button[value="green"]');
+    var blue = document.querySelector('button[value="blue"]');
+    var yellow = document.querySelector('button[value="yellow"]');
+    var fadeout = document.querySelector('button[value="fadeout"]');
+    var reset = document.querySelector('button[value="reset"]');
+    var context = canvas.getContext('2d'); // 'webgl' - 3d context
+    // create an image
+    var img = new Image();
+    img.src = 'nature.jpg';
+    img.addEventListener('load', function () {
+        console.log('Image is loaded ... ');
+        context.drawImage(img, 0,0);
+        // get pixel information for the canvas
+        var imagedata = context.getImageData(0, 0, canvas.width, canvas.height);
+        var pixel_array = imagedata.data;
+        var pixel_array2 = Array.prototype.slice.call(pixel_array);
+        range.addEventListener('change',function(){
+            filters.threshold(pixel_array, pixel_array2);
+            context.putImageData(imagedata, 0, 0);
+
+        });
+        gray.addEventListener('click' ,function(){
+            filters.grayscale(pixel_array);
+            context.putImageData(imagedata, 0, 0);
+        });
+        red.addEventListener('click',function(){
+            console.log("afterred", pixel_array);
+            filters.filtercolor(pixel_array,red.value);
+            context.putImageData(imagedata, 0, 0);
+        });
+        green.addEventListener('click',function(){
+            console.log("afterred", pixel_array);
+            filters.filtercolor(pixel_array,green.value);
+            context.putImageData(imagedata, 0, 0);
+        });
+        blue.addEventListener('click',function(){
+            console.log("afterred", pixel_array);
+            filters.filtercolor(pixel_array,blue.value);
+            context.putImageData(imagedata, 0, 0);
+        });
+        yellow.addEventListener('click',function(){
+            console.log("afterred", pixel_array);
+            filters.filtercolor(pixel_array,yellow.value);
+            context.putImageData(imagedata, 0, 0);
+        });
+        fadeout.addEventListener('click',function(){
+            filters.fadeout(pixel_array,canvas.width, canvas.height);
+            console.log("afterfadeout", pixel_array);
+            context.putImageData(imagedata,0,0);
+        });
+        reset.addEventListener('click',function(){
+            console.log("reset");
+            context.drawImage(img, 0,0);
+            imagedata = context.getImageData(0, 0, canvas.width, canvas.height);
+            pixel_array = imagedata.data;
+        })
+        /*var filter_array= filters.redscale(pixel_array) ;
+        console.log("after", filter_array);
+        var imgData = context.createImageData(100, 100);
+        var data = imgData.data;
+        for (var i = 0, len = 100 * 100 * 4; i < len; i++) {
+            data[i] = filter_array[i];
+        }
+        context.putImageData(imgData, 0, 0);*/
+        // apply the changes back to the context;
+    });
+
+
+    function rgbtohsl(r, g, b){
+        r /= 255, g /= 255, b /= 255;
+        var max = Math.max(r, g, b), min = Math.min(r, g, b);
+        var h, s, l = (max + min) / 2;
+        if(max == min){
+            h = s = 0; // achromatic
+        }else{
+            var d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch(max){
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+        return h;
+    };
+
+</script>
+
+</body>
+</html>

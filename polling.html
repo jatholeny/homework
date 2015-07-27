@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+<button id="start" value="true">GetREPOSITORIESnow!</button>
+<button id="stop" value="false">STOP!</button>
+<ul id="results"></ul>
+</body>
+<script>
+
+    var start = document.getElementById('start');
+    var stop = document.getElementById('stop');
+    var worker = new Worker('polling.js');
+
+
+    start.addEventListener('click',function(event){
+        console.log(start.value);
+        worker.postMessage(start.value);
+
+    });
+    stop.addEventListener('click',function(event){
+        console.log(stop.value);
+        worker.postMessage(stop.value);
+
+    });
+
+
+    worker.addEventListener('message',function(event){
+        console.log("here is my data:", event.data);
+        listRepos(event.data);
+
+    });
+
+
+    function listRepos(arr_repos) {
+        var ul = document.getElementById('results');
+        ul.innerHTML = '';
+        if (!Array.isArray(arr_repos)) arr_repos = Array.prototype.slice.call(arr_repos);
+        arr_repos.forEach(function (repo) {
+            var li = createElement('li', ul, '', '');
+            createElement('a', li, '', repo.name, {
+                'href': 'http://github.com/' + repo.name
+            });
+        });
+    };
+
+
+    function createElement(elementType, parent, className, innerHTML, custom) {
+        var element = document.createElement(elementType);
+        if (parent) parent.appendChild(element);
+        if (className) element.className = className;
+        if (innerHTML) element.innerHTML = innerHTML;
+        if (typeof custom !== 'undefined') {
+            for (var prop in custom) {
+                element.setAttribute(prop, custom[prop]);
+            }
+        }
+        return element;
+    }
+
+</script>
+</html>

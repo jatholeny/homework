@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="bower_components/angular/angular.js"></script>
+    <script>
+        angular.module('myApp', []).controller('MyController', function ($scope) {
+            $scope.files = [];
+        }).directive('fileReader', function ($q) {
+            return {
+                restrict: 'E',
+                templateUrl: 'fileReader.html',
+                scope: {},
+                link: function (scope, element) {
+                    Array.prototype.forEach.call(element, function (elementintemplate) {
+                        var input = elementintemplate.lastElementChild.firstElementChild;
+                        input.addEventListener('change', function () {
+                            scope.files = Array.prototype.slice.call(this.files);
+
+                            var promisearray = scope.files.map(getFileReader);
+                            $q.all(promisearray).then(function(data){
+                                    console.log(data);   //data is an array, passed from this.result below
+                                    scope.imgSrcs = data;
+
+
+                            });
+                        });
+
+                    });
+
+                    function getFileReader(file) {
+                        return $q(function (resolve, reject) {
+                            var reader = new FileReader;
+                            reader.readAsDataURL(file);
+                            reader.addEventListener('loadend', function () {
+                                resolve(this.result);
+                            });
+                            reader.addEventListener('error', function (err) {
+                                reject(err);
+                            });
+
+                            console.log(reader);
+                        });
+                    };
+
+                }
+            };
+        });
+    </script>
+</head>
+<body>
+<div ng-controller="MyController">
+    <file-reader></file-reader>
+</div>
+</body>
+</html>
