@@ -17,46 +17,61 @@
 <script>
 
     function initialize() {
+        var patharray =[];
+        var marker;
+        var infowindow;
+        var polyOptions;
+        var map;
+
         navigator.geolocation.getCurrentPosition(function (position) {
             var myLatlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
             console.log("start point", myLatlng);
             var mapOptions = {
                 center: myLatlng,
-                zoom: 17,
+                zoom: 20,
                 mapTypeId: google.maps.MapTypeId.TERRAIN
             };
 
-            var flightPlanCoordinates = [new google.maps.LatLng(myLatlng)];
+            patharray.push(myLatlng);
+            console.log("array of object" , patharray);
+            console.log("current position"+ myLatlng);
 
+            map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
 
-            var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
-
-            var marker = new google.maps.Marker({
+            marker = new google.maps.Marker({
                 position: myLatlng,
                 map: map,
-                title: 'Hello World!'
+                title: 'You are here'
             });
 
-            navigator.geolocation.watchPosition(function (position) {
-                var myLatlng2 = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-                flightPlanCoordinates.push(myLatlng2);
-                Object.defineProperty(marker, 'position', {
-                    map: event.data
-                });
+            infowindow = new google.maps.InfoWindow({
+                content:'you are in: ' + myLatlng
+            }) ;
 
-                var flightPath = new google.maps.Polyline({
-                    path: flightPlanCoordinates,
-                    geodesic: true,
-                    strokeColor: '#FF0000',
-                    strokeOpacity: 1.0,
-                    strokeWeight: 2
-                });
-
-                flightPath.setMap(map);
+            google.maps.event.addListener(marker,'click',function(){
+                infowindow.open(map,marker);
             });
 
+            polyOptions = {
+                geodesic: true,
+                strokeColor: '#FF0000',
+                strokeOpacity: 1.0,
+                strokeWeight: 2
+            };
+        });
+        navigator.geolocation.watchPosition(function (position) {
+            var anothermyLatlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+            patharray.push(anothermyLatlng);
+            console.log("adding new path....",patharray);
+            console.log("now you are"+ anothermyLatlng);
 
+            marker.position = anothermyLatlng;
+            infowindow.content='you are in: ' + anothermyLatlng;
 
+            polyOptions.path = patharray;
+            console.log(polyOptions);
+            var Path = new google.maps.Polyline(polyOptions);
+            Path.setMap(map);
         });
 
 
